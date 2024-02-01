@@ -23,7 +23,7 @@ const val URLS_FILE_NAME = "urls.json"
 const val EXECUTABLE_JAR_NAME = "simpleFilesSync.jar"
 
 fun main(args: Array<String>): Unit = runBlocking(Dispatchers.IO) {
-    val ifShouldDeleteUnusedFiles = args.getOrNull(0)?.toBooleanStrictOrNull() ?: true
+    val isShouldDeleteOldFiles = args.getOrNull(0)?.toBooleanStrictOrNull() ?: true
 
     val currentDirectory = System.getProperty("user.dir")
     val urlsFile = File(currentDirectory, URLS_FILE_NAME)
@@ -48,7 +48,7 @@ fun main(args: Array<String>): Unit = runBlocking(Dispatchers.IO) {
 
     for (file in currentDirectoryFiles) {
         // Delete unused files if the user want to
-        if (!fileNames.contains(file.name) && ifShouldDeleteUnusedFiles) {
+        if (!fileNames.contains(file.name) && isShouldDeleteOldFiles) {
             println(" * Deleting the $file as it's not needed anymore, it's not in the download urls")
             file.delete()
         }
