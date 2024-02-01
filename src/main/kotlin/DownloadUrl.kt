@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DownloadUrl(
     val url: String,
-    val sha1: String
+    val sha256: String
 )

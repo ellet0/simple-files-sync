@@ -12,7 +12,6 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
-import java.security.DigestInputStream
 import java.security.MessageDigest
 import kotlin.system.exitProcess
 
@@ -60,15 +59,15 @@ fun main(args: Array<String>): Unit = runBlocking(Dispatchers.IO) {
         val fileName = getFileNameFromUrl(downloadUrl.url)
         val file = File(currentDirectory, fileName)
         if (file.exists()) {
-            val fileHash = calculateSHA1(file)
-            if (fileHash == downloadUrl.sha1) {
+            val fileHash = calculateSHA256(file)
+            if (fileHash == downloadUrl.sha256) {
                 println(" - The file: $fileName exists with correct hash (${fileHash}), skip to the next file")
                 continue
             }
-            println(" - The file $fileName exists but the hash is not matched (the local one is $fileHash and the one from cloud is ${downloadUrl.sha1}), we will delete it and re-download it")
+            println(" - The file $fileName exists but the hash is not matched (the local one is $fileHash and the one from cloud is ${downloadUrl.sha256}), we will delete it and re-download it")
             file.delete()
         }
-        println("Downloading $fileName from ${downloadUrl.url}, let's hope your internet will not get disconnected")
+        println("Downloading $fileName from ${downloadUrl.url}")
         val responseBytes = httpClient.get(downloadUrl.url).bodyAsChannel().toByteArray()
         file.writeBytes(responseBytes)
     }
@@ -95,26 +94,18 @@ fun getFileNameFromUrl(url: String): String {
 
 
 // From StackOverFlow
-suspend fun calculateSHA1(file: File): String = withContext(Dispatchers.IO) {
-    val digest = MessageDigest.getInstance("SHA-1")
+suspend fun calculateSHA256(file: File): String = withContext(Dispatchers.IO) {
+    val messageDigest = MessageDigest.getInstance("SHA-256")
+    val buffer = ByteArray(8192) // 8 KB buffer size
 
-    // Use DigestInputStream to read the file and update the digest at the same time
-    FileInputStream(file).use { fileInputStream ->
-        DigestInputStream(fileInputStream, digest).use { digestInputStream ->
-            val buffer = ByteArray(8192)
-            while (digestInputStream.read(buffer) != -1) {
-                // Read the file in chunks and update the digest
-            }
+    FileInputStream(file).use { inputStream ->
+        var bytesRead: Int
+        while (inputStream.read(buffer).also { bytesRead = it } > 0) {
+            messageDigest.update(buffer, 0, bytesRead)
         }
     }
 
-    // Convert the digest to a hexadecimal string
-    val hashBytes = digest.digest()
-    val hexString = StringBuilder()
-
-    for (byte in hashBytes) {
-        hexString.append(String.format("%02x", byte))
-    }
-
-    hexString.toString()
+    // Convert the byte array to a hexadecimal string
+    val hashBytes = messageDigest.digest()
+    hashBytes.joinToString("") { "%02x".format(it) }
 }
