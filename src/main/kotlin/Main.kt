@@ -18,6 +18,8 @@ import kotlin.system.exitProcess
 
 const val URLS_FILE_NAME = "urls.json"
 
+const val IGNORE_FOLDER_NAME = ".ignore"
+
 // Must be the same value in build.gradle.kts when building the jar file
 const val EXECUTABLE_JAR_NAME = "simpleFilesSync.jar"
 
@@ -31,7 +33,7 @@ fun main(args: Array<String>): Unit = runBlocking(Dispatchers.IO) {
         exitProcess(1)
     }
 
-    val excludedFilesInTheCurrentDirectory = setOf(URLS_FILE_NAME, EXECUTABLE_JAR_NAME)
+    val excludedFilesInTheCurrentDirectory = setOf(URLS_FILE_NAME, EXECUTABLE_JAR_NAME, IGNORE_FOLDER_NAME)
 
     val currentDirectoryFiles =
         (File(currentDirectory).listFiles() ?: throw IllegalArgumentException("Can't list current folder")).filter {
